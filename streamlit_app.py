@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import json
 import io
+from ocr_extraction import extract_text_from_file  # <-- Import the OCR logic
 
 # Set UKM Theme Colors
 UKM_RED = "#E60000"
