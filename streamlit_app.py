@@ -33,11 +33,7 @@ st.markdown(f"<h3 style='color:{UKM_RED};'>📄 Upload Syllabus Document</h3>", 
 uploaded_file1 = st.file_uploader("Upload First Syllabus (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 uploaded_file2 = st.file_uploader("Upload Second Syllabus (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 
-# --- Keyword Lists ---
-UKM_KEYWORDS = ["Universiti Kebangsaan Malaysia", "UKM", "Fakulti", "Kod Kursus", "Program", "Semester", "Bangunan"]
-OTHER_KEYWORDS = ["Kolej", "Politeknik", "Universiti Teknologi", "Diploma", "Yuran", "Kampus", "Pengambilan"]
-
-# --- Preprocess Function ---
+# --- Preprocess Image ---
 def preprocess_image(image):
     image = np.array(image)
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -55,48 +51,53 @@ def extract_text(file):
     else:
         image = Image.open(file)
         images = [image]
-
     for page in images:
         processed = preprocess_image(page)
         text += pytesseract.image_to_string(processed)
     return text
 
-# --- Classify Document Based on Keywords ---
+# --- Identify Syllabus Source ---
 def classify_syllabus(text):
-    ukm_score = sum(kw.lower() in text.lower() for kw in UKM_KEYWORDS)
-    other_score = sum(kw.lower() in text.lower() for kw in OTHER_KEYWORDS)
+    ukm_keywords = ["universiti kebangsaan malaysia", "ukm", "fakulti", "kod kursus"]
+    other_keywords = ["politeknik", "kolej", "universiti teknologi", "institute", "diploma"]
+
+    text_lower = text.lower()
+    ukm_score = sum(kw in text_lower for kw in ukm_keywords)
+    other_score = sum(kw in text_lower for kw in other_keywords)
+
     if ukm_score > other_score:
         return "✅ UKM Syllabus"
     elif other_score > ukm_score:
         return "🏫 Other Institution/Diploma Syllabus"
     else:
-        return "❓ Unclear Institution"
+        return "❓ Unable to determine (Insufficient keywords)"
 
-# --- Process Uploaded Files ---
+# --- Main Logic ---
 if uploaded_file1 and uploaded_file2:
-    with st.spinner("Extracting text from documents..."):
+    with st.spinner("🔍 Extracting text and classifying documents..."):
         text1 = extract_text(uploaded_file1)
         text2 = extract_text(uploaded_file2)
 
-        # Save as JSON
+        result1 = classify_syllabus(text1)
+        result2 = classify_syllabus(text2)
+
+        # Save to JSON (optional)
         with open("output1.json", "w") as f:
             json.dump({"extracted_text": text1}, f)
         with open("output2.json", "w") as f:
             json.dump({"extracted_text": text2}, f)
 
-        # Classify and Display
-        result1 = classify_syllabus(text1)
-        result2 = classify_syllabus(text2)
+        st.success("✅ Text extracted and classified successfully!")
 
-        st.success("✅ Text extracted successfully!")
+        # Display classification results
+        st.markdown("### 📝 First Document Result")
+        st.info(f"🔍 Classification: {result1}")
+        st.text_area("Extracted Text from First Document:", text1, height=200)
 
-        st.markdown("### 📝 Extracted Text (Document 1)")
-        st.text_area("Text from first document:", text1, height=200)
-        st.markdown(f"**Classification:** {result1}")
+        st.markdown("### 📝 Second Document Result")
+        st.info(f"🔍 Classification: {result2}")
+        st.text_area("Extracted Text from Second Document:", text2, height=200)
 
-        st.markdown("### 📝 Extracted Text (Document 2)")
-        st.text_area("Text from second document:", text2, height=200)
-        st.markdown(f"**Classification:** {result2}")
 else:
     st.info("Please upload both syllabus documents to begin.")
 
