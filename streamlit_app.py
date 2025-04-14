@@ -5,7 +5,6 @@ from pdf2image import convert_from_bytes
 import numpy as np
 import cv2
 import json
-import io
 
 # Set UKM Theme Colors
 UKM_RED = "#E60000"
@@ -34,6 +33,10 @@ st.markdown(f"<h3 style='color:{UKM_RED};'>📄 Upload Syllabus Document</h3>", 
 uploaded_file1 = st.file_uploader("Upload First Syllabus (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 uploaded_file2 = st.file_uploader("Upload Second Syllabus (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 
+# --- Keyword Lists ---
+UKM_KEYWORDS = ["Universiti Kebangsaan Malaysia", "UKM", "Fakulti", "Kod Kursus", "Program", "Semester", "Bangunan"]
+OTHER_KEYWORDS = ["Kolej", "Politeknik", "Universiti Teknologi", "Diploma", "Yuran", "Kampus", "Pengambilan"]
+
 # --- Preprocess Function ---
 def preprocess_image(image):
     image = np.array(image)
@@ -58,6 +61,17 @@ def extract_text(file):
         text += pytesseract.image_to_string(processed)
     return text
 
+# --- Classify Document Based on Keywords ---
+def classify_syllabus(text):
+    ukm_score = sum(kw.lower() in text.lower() for kw in UKM_KEYWORDS)
+    other_score = sum(kw.lower() in text.lower() for kw in OTHER_KEYWORDS)
+    if ukm_score > other_score:
+        return "✅ UKM Syllabus"
+    elif other_score > ukm_score:
+        return "🏫 Other Institution/Diploma Syllabus"
+    else:
+        return "❓ Unclear Institution"
+
 # --- Process Uploaded Files ---
 if uploaded_file1 and uploaded_file2:
     with st.spinner("Extracting text from documents..."):
@@ -67,21 +81,25 @@ if uploaded_file1 and uploaded_file2:
         # Save as JSON
         with open("output1.json", "w") as f:
             json.dump({"extracted_text": text1}, f)
-
         with open("output2.json", "w") as f:
             json.dump({"extracted_text": text2}, f)
 
+        # Classify and Display
+        result1 = classify_syllabus(text1)
+        result2 = classify_syllabus(text2)
+
         st.success("✅ Text extracted successfully!")
+
         st.markdown("### 📝 Extracted Text (Document 1)")
         st.text_area("Text from first document:", text1, height=200)
+        st.markdown(f"**Classification:** {result1}")
 
         st.markdown("### 📝 Extracted Text (Document 2)")
         st.text_area("Text from second document:", text2, height=200)
-
+        st.markdown(f"**Classification:** {result2}")
 else:
     st.info("Please upload both syllabus documents to begin.")
 
 # --- Footer ---
 st.markdown("---")
 st.markdown(f"<p style='text-align:center;color:{UKM_BLUE};'>© 2025 Universiti Kebangsaan Malaysia | Transfer Credit Checker</p>", unsafe_allow_html=True)
-
