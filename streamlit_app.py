@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 import json
 import io
-from ocr_extraction import extract_text_from_file  # <-- Import the OCR logic
+from ocr_similarity_utils import extract_text_from_file, calculate_bert_similarity, calculate_tfidf_similarity
 
 # Set UKM Theme Colors
 UKM_RED = "#E60000"
@@ -102,6 +102,14 @@ if uploaded_file1 and uploaded_file2:
 
 else:
     st.info("📥 Please upload both syllabus documents to begin.")
+
+# --- Similarity Calculation ---
+st.markdown("### 📊 Document Similarity Analysis")
+bert_score = calculate_bert_similarity(text1, text2)
+tfidf_score = calculate_tfidf_similarity(text1, text2)
+
+st.write(f"**BERT-based Similarity:** {bert_score}%")
+st.write(f"**TF-IDF + Cosine Similarity:** {tfidf_score}%")
 
 # --- Footer ---
 st.markdown("---")
