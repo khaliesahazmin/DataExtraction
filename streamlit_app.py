@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 import json
 import io
-from ocr_similarity_utils import extract_text_from_file, calculate_bert_similarity, calculate_tfidf_similarity
+from ocr_similarity_utils import calculate_bert_similarity, calculate_tfidf_similarity
 
 # Set UKM Theme Colors
 UKM_RED = "#E60000"
@@ -23,7 +23,7 @@ st.set_page_config(
 # --- Title and Logo ---
 col1, col2 = st.columns([1, 6])
 with col1:
-    st.image("https://raw.githubusercontent.com/khaliesahazmin/DataExtraction/main/ukm_logo.png/logo_UKM.png", width=80)
+    st.image("https://raw.githubusercontent.com/khaliesahazmin/DataExtraction/main/ukm_logo.png", width=80)
 with col2:
     st.markdown(f"<h1 style='color:{UKM_RED};'>Transfer Credit Checker System</h1>", unsafe_allow_html=True)
     st.markdown(f"<h5 style='color:{UKM_BLUE};'>Universiti Kebangsaan Malaysia</h5>", unsafe_allow_html=True)
@@ -34,18 +34,6 @@ st.markdown("---")
 st.markdown(f"<h3 style='color:{UKM_RED};'>📄 Upload Syllabus Document</h3>", unsafe_allow_html=True)
 uploaded_file1 = st.file_uploader("Upload First Syllabus from UKM (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 uploaded_file2 = st.file_uploader("Upload Second Syllabus from another institute/diploma program (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
-
-text1 = extract_text(uploaded_file1) if uploaded_file1 else None
-text2 = extract_text(uploaded_file2) if uploaded_file2 else None
-
-if text1 and text2:
-    st.markdown("### 📊 Document Similarity Analysis")
-    bert_score = calculate_bert_similarity(text1, text2)
-    tfidf_score = calculate_tfidf_similarity(text1, text2)
-    st.write(f"**BERT-based Similarity:** {bert_score}%")
-    st.write(f"**TF-IDF Cosine Similarity:** {tfidf_score}%")
-else:
-    st.warning("Please upload both documents to compare.")
 
 # --- Preprocess Function ---
 def preprocess_image(image):
@@ -112,16 +100,16 @@ if uploaded_file1 and uploaded_file2:
         st.info(classification2)
         st.text_area("Text from second document (Other Institute):", text2, height=200)
 
+        # --- Similarity Calculation ---
+        st.markdown("### 📊 Document Similarity Analysis")
+        bert_score = calculate_bert_similarity(text1, text2)
+        tfidf_score = calculate_tfidf_similarity(text1, text2)
+
+        st.write(f"**BERT-based Similarity:** {bert_score}%")
+        st.write(f"**TF-IDF + Cosine Similarity:** {tfidf_score}%")
+
 else:
     st.info("📥 Please upload both syllabus documents to begin.")
-
-# --- Similarity Calculation ---
-st.markdown("### 📊 Document Similarity Analysis")
-bert_score = calculate_bert_similarity(text1, text2)
-tfidf_score = calculate_tfidf_similarity(text1, text2)
-
-st.write(f"**BERT-based Similarity:** {bert_score}%")
-st.write(f"**TF-IDF + Cosine Similarity:** {tfidf_score}%")
 
 # --- Footer ---
 st.markdown("---")
