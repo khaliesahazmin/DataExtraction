@@ -35,6 +35,18 @@ st.markdown(f"<h3 style='color:{UKM_RED};'>📄 Upload Syllabus Document</h3>", 
 uploaded_file1 = st.file_uploader("Upload First Syllabus from UKM (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 uploaded_file2 = st.file_uploader("Upload Second Syllabus from another institute/diploma program (PDF/Image)", type=['pdf', 'png', 'jpg', 'jpeg'])
 
+text1 = extract_text(uploaded_file1) if uploaded_file1 else None
+text2 = extract_text(uploaded_file2) if uploaded_file2 else None
+
+if text1 and text2:
+    st.markdown("### 📊 Document Similarity Analysis")
+    bert_score = calculate_bert_similarity(text1, text2)
+    tfidf_score = calculate_tfidf_similarity(text1, text2)
+    st.write(f"**BERT-based Similarity:** {bert_score}%")
+    st.write(f"**TF-IDF Cosine Similarity:** {tfidf_score}%")
+else:
+    st.warning("Please upload both documents to compare.")
+
 # --- Preprocess Function ---
 def preprocess_image(image):
     image = np.array(image)
